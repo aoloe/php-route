@@ -1,6 +1,7 @@
 <?php
 
-new Aoloe\Debug();
+namespace Aoloe;
+
 use function Aoloe\debug as debug;
 
 class Route {
