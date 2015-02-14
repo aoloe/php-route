@@ -26,7 +26,7 @@ $route = new Aoloe\Route();
 $route->set_url_request('/route/test/');
 $test->assert_identical("set url request /test/", $test->access_property($route, 'url_request'), '/route/test/');
 $test->assert_identical("set url request /test/", $test->access_property($route, 'url'), 'route/test');
-$test->assert_identical("url segement", $route->get_url_segment(), array('route', 'test')); // '/route/test/'
+$test->assert_identical("url segement", $test->access_property($route, 'url_segment'), array('route', 'test')); // '/route/test/'
 unset($route);
 $test->stop();
 
@@ -75,6 +75,7 @@ $route->read_current_page();
 $test->assert_identical("get page about/contact from home+about/contact structure", $route->get_page(), '');
 $test->assert_identical("get url about/contact from home+about/contact structure", $route->get_page_url(), 'about/contact');
 $test->assert_identical("get query about/contact from home+about/contact structure", $route->get_page_query(), null);
+$test->assert_identical("existing page is get", $route->get_page(), '');
 $test->assert_identical("existing page is found", $route->is_not_found(), false);
 $route->set_url_request('/test/');
 $route->read_current_page();
@@ -150,4 +151,94 @@ $route->set_url_request('/about/contact/');
 $route->read_current_page();
 $test->assert_identical("url about/contact matches alias home", $route->get_page_url(), 'home');
 unset($route);
+$test->stop();
+
+$test->start("use language detection");
+$route = new Aoloe\Route();
+$route->set_url_request('/en/contact/');
+$route->read_language();
+$test->assert_identical("detect the default language from the url", $route->get_language(), 'en');
+$route = new Aoloe\Route();
+$route->set_language_available(array('en', 'it'));
+$route->set_url_request('/it/contact/');
+$route->read_language();
+$test->assert_identical("detect it among en and it", $route->get_language(), 'it');
+$test->assert_identical("url segement", $test->access_property($route, 'url_segment'), array('contact'));
+$route = new Aoloe\Route();
+$route->set_language_available(array('en', 'it'));
+$route->set_url_request('/de/contact/');
+$route->read_language();
+$test->assert_identical("don't detect de among en and it", $route->get_language(), null);
+$test->assert_identical("url segement", $test->access_property($route, 'url_segment'), array('de', 'contact'));
+$test->stop();
+
+$test->start("use url in navigation");
+$structure = array (
+    'home' => array (
+        'navigation' => array ('url' => '', 'label' => 'Home'),
+    ),
+    'about' => array (
+        'children' => array (
+            'contact' => array (
+                'module' => array ('name' => 'Contact'),
+                'navigation' => array ('label' => 'Contact'),
+            )
+        )
+    )
+);
+$route = new Aoloe\Route();
+$route->set_structure($structure);
+$route->set_url_request('');
+$route->read_current_page();
+$test->assert_identical("read the home by passing an empty request", $route->get_page_url(), 'home');
+$test->assert_identical("existing page is found", $route->is_not_found(), false);
+$test->assert_identical("get home page by passing an empty request", $route->get_page(), array ('navigation' => array ('url' => '', 'label' => 'Home')));
+$test->stop();
+
+$test->start("use language when reading pages");
+$structure = array (
+    'home' => array (
+    ),
+    'about' => array (
+        'navigation' => array (
+            'en' => array ('url' => 'about', 'label' => 'About us'),
+            'it' => array ('url' => 'chi-siamo', 'label' => 'Chi siamo'),
+        ),
+        'children' => array (
+            'contact' => array (
+                'module' => array ('name' => 'Contact'),
+                'navigation' => array (
+                    'en' => array ('url' => 'contact', 'label' => 'Contact'),
+                    'it' => array ('url' => 'contatto', 'label' => 'Contatto'),
+                ),
+            )
+        )
+    )
+);
+$route = new Aoloe\Route();
+$route->set_structure($structure);
+$route->set_language_available(array('en', 'it'));
+$route->set_url_request('/en/about/');
+$route->read_language();
+$route->read_current_page();
+$test->assert_identical("read the en about first level page", $route->get_page_url(), 'about');
+$test->assert_identical("about parameter not read if matches a child", $route->get_page_query(), null);
+$test->assert_identical("existing page is found", $route->is_not_found(), false);
+$route->set_url_request('/it/chi-siamo/');
+$route->read_language();
+$route->read_current_page();
+$test->assert_identical("read the it about first level page", $route->get_page_url(), 'about');
+$test->assert_identical("about parameter not read if matches a child", $route->get_page_query(), null);
+$test->assert_identical("existing page is found", $route->is_not_found(), false);
+$route->set_url_request('/it/chi-siamo/contatto');
+$route->read_language();
+$route->read_current_page();
+$test->assert_identical("read the it chi-siamo/contatto second level page", $route->get_page_url(), 'about/contact');
+$test->assert_identical("about parameter not read if matches a child", $route->get_page_query(), null);
+$test->assert_identical("existing page is found", $route->is_not_found(), false);
+$route->set_url_request('/it/chi-siamo/contattos');
+$route->read_language();
+$route->read_current_page();
+$test->assert_identical("read the it chi-siamo/contattos non existing second level page", $route->get_page_url(), null);
+$test->assert_identical("non existing page not found", $route->is_not_found(), true);
 $test->stop();

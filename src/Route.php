@@ -1,20 +1,22 @@
 <?php
-
-/**
- * TODO:
- * - implement the language detection
- */
-
 namespace Aoloe;
-
 use function Aoloe\debug as debug;
 
 class Route {
+    private $language = null;
+    private $language_available = array('en');
+    /** the default language is used if a language is detected but not provided for the specific page */
+    private $language_default = 'en';
+    public function set_language_default($language) {$this->language_default = $language;}
+    public function set_language_available($available) {$this->language_available = $available;}
+    // public function set_language($language) {$this->language = $language;}
+    public function get_language() {return $this->language;} // TODO: really useful?
+
     private $url_base = null;
     private $url_request = null;
     private $url = null;
     private $url_segment = null;
-    private $not_found = false;
+
     public function set_url_base($url) {$this->url_base = trim($url, '/');}
     public function set_url_request($url) {
         $this->url_request = $url;
@@ -22,12 +24,10 @@ class Route {
         $this->url = isset($this->url_base) ? trim(substr($url, strlen($this->url_base)), '/') : $url;
         $this->url_segment = explode('/', $url);
     }
-    public function get_url_segment() {return $this->url_segment;}
-    public function is_not_found() {return $this->not_found;}
     public function read_url_request() {
         $this->set_url_request(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
     }
-    public function is_url_request($url = null) {
+    public function is_url_request($url = null) { // TODO really useful?
         return is_null($url) ? isset($this->url_request) : ($this->url_request == $url);
     }
     public function get_url() {return $this->url;}
@@ -38,11 +38,25 @@ class Route {
     private $page = null;
     private $page_url = null;
     private $page_query = null;
-    public function get_query() {return $this->page_query;}
+    private $not_found = false;
 
     public function get_page() {return $this->page;}
     public function get_page_url() {return $this->page_url;}
     public function get_page_query() {return $this->page_query;}
+    public function is_not_found() {return $this->not_found;}
+
+    /**
+     * if the first chunk of the url_segment corresponds to one of the available language, use it as
+     * the current language and remove it from url_segment.
+     * if you read the language and a language is found, it will be set and used when reading the page.
+     */
+    public function read_language() {
+        $language = $this->url_segment[0];
+        if (in_array($language, $this->language_available)) {
+            $this->language = $language;
+            $this->url_segment = array_slice($this->url_segment, 1);
+        }
+    }
 
     public function read_current_page() {
         list($this->page, $this->page_url, $this->page_query)  = $this->get_current_page($this->url_segment, $this->structure);
@@ -61,34 +75,67 @@ class Route {
         $url = reset($url_segment);
         $url_child = '';
         $child_is_active = false;
+
+        $key_current = null;
         if (array_key_exists($url, $structure)) {
+            $key_current = $url;
+        } else {
+            foreach ($structure as $key => $value) {
+                if (isset($this->language)) {
+                    $value = $this->get_structure_translated($value);
+                }
+                if (is_array($value) && array_key_exists('navigation', $value) && is_array($value['navigation']) && array_key_exists('url', $value['navigation']) && ($value['navigation']['url'] == $url)) {
+                    $key_current = $key;
+                    break;
+                }
+            }
+        }
+        // debug('key_current', $key_current);
+        if (isset($key_current)) {
             // debug('url_segment', $url_segment);
+            $url = $key_current;
             if (count($url_segment) > 1) {
-                if (array_key_exists('children', $structure[$url])) {
-                    list($page, $url_child, $page_query) = $this->get_current_page(array_slice($url_segment, 1), $structure[$url]['children']);
+                if (array_key_exists('children', $structure[$key_current])) {
+                    list($page, $url_child, $page_query) = $this->get_current_page(array_slice($url_segment, 1), $structure[$key_current]['children']);
                     if (isset($page)) {
                         $child_is_active = true;
                         $url = implode('/', array($url, $url_child));
                     }
                 }
-                if (is_null($page) && array_key_exists('query', $structure[$url])) {
-                    $page = $structure[$url];
+                if (is_null($page) && array_key_exists('query', $structure[$key_current])) {
+                    $page = $structure[$key_current];
                     $page_query = implode('/', array_slice($url_segment, 1));
                 }
                 if (is_null($page)) {
-                    debug('it should never get in here!');
                     $url = null;
                 }
             } else {
-                $page = $structure[$url];
+                $page = $structure[$key_current];
             }
         } else {
-            $url = null;
             $this->not_found = true;
+            $url = null;
         }
         // debug('url', $url);
         // debug('page_query', $page_query);
         // debug('page', $page);
         return array($page, $url, $page_query);
+    }
+
+    private function get_structure_translated($structure) {
+        $result = $structure;
+        if (array_key_exists('navigation', $structure)) {
+            $key = null;
+            if (array_key_exists($this->language, $structure['navigation'])) {
+                $key = $this->language;
+            } elseif (array_key_exists($this->language_default, $structure['navigation'])) {
+                $key = $this->language_default;
+            } else {
+                $key = current(array_keys($structure['navigation'])); // the first translation
+            }
+            $result['navigation'] = $structure['navigation'][$key];
+            $result['language'] = $key;
+        }
+        return $result;
     }
 }
