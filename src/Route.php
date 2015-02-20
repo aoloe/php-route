@@ -1,6 +1,6 @@
 <?php
 namespace Aoloe;
-use function Aoloe\debug as debug;
+// use function Aoloe\debug as debug;
 
 class Route {
     private $language = null;
@@ -58,11 +58,20 @@ class Route {
         }
     }
 
-    public function read_current_page() {
-        list($this->page, $this->page_url, $this->page_query)  = $this->get_current_page($this->url_segment, $this->structure);
+    public function read_current_page($page_url = null) {
+        if (isset($page_url)) {
+            // TODO: what if the $page url must be translated?
+            $url_segment = explode('/', $page_url);
+        } else {
+            $url_segment = $this->url_segment;
+        }
+        list($this->page, $this->page_url, $this->page_query)  = $this->get_current_page($url_segment, $this->structure);
         if (isset($this->page) && is_array($this->page) && array_key_exists('alias', $this->page)) {
             // debug('alias', $page['alias']);
             list($this->page, $this->page_url, $this->page_query)  = $this->get_current_page(explode('/', $this->page['alias']), $this->structure);
+        }
+        if (is_string($this->page)) {
+            $this->page = array();
         }
         // debug('page', $this->page);
         // debug('page_url', $this->page_url);

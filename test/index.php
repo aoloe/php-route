@@ -135,6 +135,12 @@ $route->set_structure($structure);
 $route->set_url_request('/home/');
 $route->read_current_page();
 $test->assert_identical("url home matches alias about/contact", $route->get_page_url(), 'about/contact');
+$structure['home']['alias'] = array ('url' => $structure['home']['alias'], 'follow' => false);
+$route->set_structure($structure);
+$route->set_url_request('/home/');
+$route->read_current_page();
+$test->assert_identical("url home matches home on alias about/contact with no follow", $route->get_page_url(), 'home');
+
 $structure = array (
     'home' => array (
     ),
