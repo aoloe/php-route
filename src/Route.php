@@ -39,11 +39,14 @@ class Route {
     private $page_url = null;
     private $page_query = null;
     private $not_found = false;
+    private $page_aliased_url = null;
 
     public function get_page() {return $this->page;}
     public function get_page_url() {return $this->page_url;}
     public function get_page_query() {return $this->page_query;}
     public function is_not_found() {return $this->not_found;}
+    public function get_page_aliased_url() {return $this->page_aliased_url;}
+    public function is_page_aliased_url() {return isset($this->page_aliased_url);}
 
     /**
      * if the first chunk of the url_segment corresponds to one of the available language, use it as
@@ -67,8 +70,16 @@ class Route {
         }
         list($this->page, $this->page_url, $this->page_query)  = $this->get_current_page($url_segment, $this->structure);
         if (isset($this->page) && is_array($this->page) && array_key_exists('alias', $this->page)) {
-            // debug('alias', $page['alias']);
-            list($this->page, $this->page_url, $this->page_query)  = $this->get_current_page(explode('/', $this->page['alias']), $this->structure);
+            if (is_array($this->page['alias'])) {
+                $url = $this->page['alias']['url'];
+                if (!array_key_exists('follow', $this->page['alias']) || !$this->page['alias']['follow']) {
+                    $this->page_aliased_url = $this->page_url;
+                }
+            } else {
+                $url = $this->page['alias'];
+                $this->page_aliased_url = $this->page_url;
+            }
+            list($this->page, $this->page_url, $this->page_query)  = $this->get_current_page(explode('/', $url), $this->structure);
         }
         if (is_string($this->page)) {
             $this->page = array();
