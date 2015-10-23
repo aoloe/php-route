@@ -17,15 +17,15 @@ class Route {
     private $url = null;
     private $url_segment = null;
 
-    public function set_url_base($url) {$this->url_base = trim($url, '/');}
+    public function set_url_base($url) {$this->url_base = trim($url, '/').'/';}
     public function set_url_request($url) {
         $this->url_request = $url;
         $url = trim($url, '/');
         $this->url = isset($this->url_base) ? trim(substr($url, strlen($this->url_base)), '/') : $url;
-        $this->url_segment = explode('/', $url);
+        $this->url_segment = explode('/', $this->url);
     }
     public function read_url_request() {
-        $this->set_url_request(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+        $this->set_url_request(ltrim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)), '/');
     }
     public function is_url_request($url = null) { // TODO really useful?
         return is_null($url) ? isset($this->url_request) : ($this->url_request == $url);
