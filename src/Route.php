@@ -102,6 +102,13 @@ class Route {
 
         $key_current = $this->get_key_matching_url_in_structure($url, $structure);
         // debug('key_current', $key_current);
+        // if no item has been found, we have to look for a possible home with query
+        if (is_null($key_current)) {
+            $key_current = $this->get_key_matching_url_in_structure('', $structure);
+            if (isset($key_current) && !array_key_exists('query', $structure[$key_current])) {
+                $key_current = null;
+            }
+        }
         if (isset($key_current)) {
             // debug('url_segment', $url_segment);
             if (!is_array($structure[$key_current])) {

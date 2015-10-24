@@ -118,6 +118,26 @@ $test->assert_identical("about parameter not read if matches a child", $route->g
 $route->set_url_request('/about/abcd/');
 $route->read_current_page();
 $test->assert_identical("about parameter read even if there are non matching children", $route->get_page_query(), 'abcd');
+
+$structure = array (
+    'home' => array (
+        'navigation' => array ('url' => ''),
+        'query' => true,
+    ),
+    'about' => array (
+        'query' => true,
+        'children' => array (
+            'contact' => array (
+                'query' => true,
+            )
+        )
+    )
+);
+$route->set_structure($structure);
+$route->set_url_base('project/');
+$route->set_url_request('/project/abcd');
+$route->read_current_page();
+$test->assert_identical("url with url base and parameter matches home", $route->get_page_url(), 'home');
 unset($route);
 $test->stop();
 
