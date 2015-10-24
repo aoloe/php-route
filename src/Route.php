@@ -70,20 +70,14 @@ class Route {
             $url_segment = $this->url_segment;
         }
         list($this->page, $this->page_url, $this->page_query)  = $this->get_current_page($url_segment, $this->structure);
-        if (isset($this->page) && is_array($this->page) && array_key_exists('alias', $this->page)) {
-            if (is_array($this->page['alias'])) {
-                $url = $this->page['alias']['url'];
-                if (!array_key_exists('follow', $this->page['alias']) || !$this->page['alias']['follow']) {
-                    $this->page_aliased_url = $this->page_url;
-                }
-            } else {
-                $url = $this->page['alias'];
+
+        list($alias_url, $alias_follow) = $this->get_aliased_page($this->page);
+        if (isset($alias_url)) {
+            if (!$alias_follow) {
                 $this->page_aliased_url = $this->page_url;
             }
-            list($this->page, $this->page_url, $this->page_query)  = $this->get_current_page(explode('/', $url), $this->structure);
-        }
-        if (is_string($this->page)) {
-            $this->page = array();
+            $url_segment = explode('/', $alias_url);
+            list($this->page, $this->page_url, $this->page_query)  = $this->get_current_page($url_segment, $this->structure);
         }
         // debug('page', $this->page);
         // debug('page_url', $this->page_url);
@@ -127,6 +121,9 @@ class Route {
             $this->not_found = true;
             $url = null;
         }
+        if (is_string($page)) {
+            $page = array();
+        }
         // debug('url', $url);
         // debug('page_query', $page_query);
         // debug('page', $page);
@@ -155,6 +152,23 @@ class Route {
         }
         return $result;
     }
+
+    private function get_aliased_page($page) {
+        $alias_url = null;
+        $alias_follow = false;
+        if (isset($page) && array_key_exists('alias', $page)) {
+            if (is_array($page['alias'])) {
+                $alias_url = $page['alias']['url'];
+                if (array_key_exists('follow', $page['alias']) && $page['alias']['follow']) {
+                    $alias_follow = true;
+                }
+            } else {
+                $alias_url = $this->page['alias'];
+            }
+        }
+        return array($alias_url, $alias_follow);
+    }
+
 
     private function get_structure_translated($structure) {
         $result = $structure;
