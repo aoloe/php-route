@@ -133,6 +133,11 @@ class Route {
         return array($page, $url, $page_query);
     }
 
+    /**
+     * an url matches an item if it matches:
+     * - the key in structure
+     * - the url in the item's navigation (if a language is defined, it's taken into consideration)
+     */
     private function get_key_matching_url_in_structure($url, $structure) {
         $result = null;
         if (array_key_exists($url, $structure)) {
