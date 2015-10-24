@@ -18,6 +18,7 @@ class Route {
     private $url_segment = null;
 
     public function set_url_base($url) {$this->url_base = trim($url, '/').'/';}
+    public function get_url_base() {return $this->url_base;}
     public function set_url_request($url) {
         $this->url_request = $url;
         $url = trim($url, '/');
