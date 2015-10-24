@@ -73,6 +73,7 @@ class Route {
 
         list($alias_url, $alias_follow) = $this->get_aliased_page($this->page);
         if (isset($alias_url)) {
+            $this->page_aliased_url = null;
             if (!$alias_follow) {
                 $this->page_aliased_url = $this->page_url;
             }
@@ -84,6 +85,14 @@ class Route {
         // debug('page_query', $this->page_query);
     }
 
+    /**
+     * TODO: should be renamed from get_current_page to get_matching_page() ?
+     * match the first segment in $url_segment with structure.
+     * if it matches and there are further segments
+     * - check if any children match
+     * - if not, check if 'query' is set and use the rest of the $url_segment as the query
+     * - if not no page has been found
+     */
     private function get_current_page($url_segment, $structure) {
         $page = null;
         $page_query = null;

@@ -139,12 +139,19 @@ $structure = array (
 $route->set_structure($structure);
 $route->set_url_request('/home/');
 $route->read_current_page();
+// TODO: not sure what the difference between follow and no follow should be... it fails for now
 $test->assert_identical("url home matches alias about/contact", $route->get_page_url(), 'about/contact');
 $structure['home']['alias'] = array ('url' => $structure['home']['alias'], 'follow' => false);
 $route->set_structure($structure);
 $route->set_url_request('/home/');
 $route->read_current_page();
 $test->assert_identical("url home matches home on alias about/contact with no follow", $route->get_page_url(), 'home');
+$structure['home']['alias']['follow'] = true;
+$route->set_structure($structure);
+$route->set_url_request('/home/');
+$route->read_current_page();
+// TODO: not sure what the difference between follow and no follow should be... it fails for now
+$test->assert_identical("url home matches home on alias about/contact with follow", $route->get_page_url(), 'home');
 
 $structure = array (
     'home' => array (
