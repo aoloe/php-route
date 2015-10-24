@@ -98,6 +98,7 @@ class Route {
         foreach ($structure as $key => $value) {
             $url = $this->get_url_from_structure_item($key, $value);
             if (is_array($value) && array_key_exists('query', $value) && $value['query'] && (trim($url, '/') == '')) {
+                $this->not_found = false; // often this will be called after having failed get_current_page()
                 return array($value, $key, implode('/', $url_segment));
             }
         }
