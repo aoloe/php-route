@@ -90,6 +90,7 @@ $test->assert_identical("get non existing url test from home+about/contact struc
 unset($route);
 $test->stop();
 
+current_test: // <--- set the label to go to
 $test->start("read query");
 $route = new Aoloe\Route();
 $structure = array (
@@ -135,9 +136,10 @@ $structure = array (
 );
 $route->set_structure($structure);
 $route->set_url_base('project/');
-$route->set_url_request('/project/abcd');
+$route->set_url_request('/project/my-project');
 $route->read_current_page();
 $test->assert_identical("url with url base and parameter matches home", $route->get_page_url(), 'home');
+$test->assert_identical("query with url base and parameter matches home", $route->get_page_query(), 'my-project');
 unset($route);
 $test->stop();
 

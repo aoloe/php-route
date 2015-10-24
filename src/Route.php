@@ -71,6 +71,11 @@ class Route {
         }
         list($this->page, $this->page_url, $this->page_query)  = $this->get_current_page($url_segment, $this->structure);
 
+        if (is_null($this->page)) {
+            list($this->page, $this->page_url, $this->page_query) = $this->get_home_with_query($url_segment, $this->structure);
+            // this won't work correctly if the page has an alias... but can it have it?
+        }
+
         list($alias_url, $alias_follow) = $this->get_aliased_page($this->page);
         if (isset($alias_url)) {
             $this->page_aliased_url = null;
@@ -83,6 +88,19 @@ class Route {
         // debug('page', $this->page);
         // debug('page_url', $this->page_url);
         // debug('page_query', $this->page_query);
+    }
+
+    /**
+     * if the home collects the query, it won't be found by get_current_page().
+     * check for it at the root level (only, for now)
+     */
+    private function get_home_with_query($url_segment, $structure) {
+        foreach ($structure as $key => $value) {
+            $url = $this->get_url_from_structure_item($key, $value);
+            if (is_array($value) && array_key_exists('query', $value) && $value['query'] && (trim($url, '/') == '')) {
+                return array($value, $key, implode('/', $url_segment));
+            }
+        }
     }
 
     /**
@@ -140,6 +158,18 @@ class Route {
     }
 
     /**
+     * in a structure item, the url can be defined as $value['navigation']['url'] or the key is used
+     * (must be tested separetely)
+     */
+    private function get_url_from_structure_item($value) {
+        $result = null;
+        if (is_array($value) && array_key_exists('navigation', $value) && is_array($value['navigation']) && array_key_exists('url', $value['navigation'])) {
+            $result = $value['navigation']['url'];
+        }
+        return $result;
+    }
+
+    /**
      * an url matches an item if it matches:
      * - the key in structure
      * - the url in the item's navigation (if a language is defined, it's taken into consideration)
@@ -153,7 +183,8 @@ class Route {
                 if (isset($this->language)) {
                     $value = $this->get_structure_translated($value);
                 }
-                if (is_array($value) && array_key_exists('navigation', $value) && is_array($value['navigation']) && array_key_exists('url', $value['navigation']) && ($value['navigation']['url'] == $url)) {
+                $value_url = $this->get_url_from_structure_item($value);
+                if (is_array($value) && ($value_url == $url)) {
                     $result = $key;
                     break;
                 }
