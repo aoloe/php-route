@@ -97,20 +97,7 @@ class Route {
         $url_child = '';
         $child_is_active = false;
 
-        $key_current = null;
-        if (array_key_exists($url, $structure)) {
-            $key_current = $url;
-        } else {
-            foreach ($structure as $key => $value) {
-                if (isset($this->language)) {
-                    $value = $this->get_structure_translated($value);
-                }
-                if (is_array($value) && array_key_exists('navigation', $value) && is_array($value['navigation']) && array_key_exists('url', $value['navigation']) && ($value['navigation']['url'] == $url)) {
-                    $key_current = $key;
-                    break;
-                }
-            }
-        }
+        $key_current = $this->get_key_matching_url_in_structure($url, $structure);
         // debug('key_current', $key_current);
         if (isset($key_current)) {
             // debug('url_segment', $url_segment);
@@ -144,6 +131,24 @@ class Route {
         // debug('page_query', $page_query);
         // debug('page', $page);
         return array($page, $url, $page_query);
+    }
+
+    private function get_key_matching_url_in_structure($url, $structure) {
+        $result = null;
+        if (array_key_exists($url, $structure)) {
+            $result = $url;
+        } else {
+            foreach ($structure as $key => $value) {
+                if (isset($this->language)) {
+                    $value = $this->get_structure_translated($value);
+                }
+                if (is_array($value) && array_key_exists('navigation', $value) && is_array($value['navigation']) && array_key_exists('url', $value['navigation']) && ($value['navigation']['url'] == $url)) {
+                    $result = $key;
+                    break;
+                }
+            }
+        }
+        return $result;
     }
 
     private function get_structure_translated($structure) {
