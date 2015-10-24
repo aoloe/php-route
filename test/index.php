@@ -10,6 +10,11 @@ include('../vendor/aoloe/php-debug/src/Debug.php');
 
 $test = new Aoloe\Test();
 
+// Aoloe\debug('jumping to a current failing test');
+// goto current_test;
+// 
+// current_test: // <--- set the label to go to
+
 $test->start("Import the GitHub deploy source");
 $test->assert_identical('Route class loaded', class_exists('Aoloe\Route'), true);
 $route = new Aoloe\Route();
@@ -57,7 +62,7 @@ $route = new Aoloe\Route();
 $route->set_structure(array ('home' => ""));
 $route->set_url_request('/home/');
 $route->read_current_page();
-$test->assert_identical("get page from simplest matching structure", $route->get_page(), '');
+$test->assert_identical("get page from simplest matching structure", $route->get_page(), array());
 $test->assert_identical("get url from simplest matching structure", $route->get_page_url(), 'home');
 $test->assert_identical("get query from simplest matching structure", $route->get_page_query(), null);
 
@@ -72,10 +77,10 @@ $structure = array (
 $route->set_structure($structure);
 $route->set_url_request('/about/contact/');
 $route->read_current_page();
-$test->assert_identical("get page about/contact from home+about/contact structure", $route->get_page(), '');
+$test->assert_identical("get page about/contact from home+about/contact structure", $route->get_page(), array());
 $test->assert_identical("get url about/contact from home+about/contact structure", $route->get_page_url(), 'about/contact');
 $test->assert_identical("get query about/contact from home+about/contact structure", $route->get_page_query(), null);
-$test->assert_identical("existing page is get", $route->get_page(), '');
+$test->assert_identical("existing page is get", $route->get_page(), array());
 $test->assert_identical("existing page is found", $route->is_not_found(), false);
 $route->set_url_request('/test/');
 $route->read_current_page();

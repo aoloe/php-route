@@ -114,6 +114,9 @@ class Route {
         // debug('key_current', $key_current);
         if (isset($key_current)) {
             // debug('url_segment', $url_segment);
+            if (!is_array($structure[$key_current])) {
+                $structure[$key_current] = array();
+            }
             $url = $key_current;
             if (count($url_segment) > 1) {
                 if (array_key_exists('children', $structure[$key_current])) {

@@ -3,8 +3,12 @@
 <head>
 <meta charset="utf-8">
 <title>Documentation: Documentation</title>
+<!-- bug: does not work on linux https://code.google.com/p/googlefontdirectory/issues/detail?id=368 -->
+<!--
 <link href='http://fonts.googleapis.com/css?family=Fira+Sans:300,400,300italic,400italic' rel='stylesheet' type='text/css'>
+-->
 <link href='http://fonts.googleapis.com/css?family=Fira+Mono' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" href="http://mozilla.github.io/Fira/fira.css">
 <style>
     .documentation {
         font-family: "Fira Sans", "Source Sans Pro", Helvetica, Arial, sans-serif;
